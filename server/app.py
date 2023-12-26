@@ -22,28 +22,22 @@ def clear_session():
 
 @app.route('/articles')
 def index_articles():
-
     pass
 
 @app.route('/articles/<int:id>')
 def show_article(id):
-    art = Article.query.filter_by(id = id).first()
-    session['page_views'] = session.get('page_views') if session.get('page_views') > 1 else 1
+    session['page_views'] = 0 if not session.get('page_views') else session.get('page_views')
+    session['page_views'] += 1
 
-    while session.get('page_views') < 4: 
-        if art:
-            resp_body = art.to_dict()
-            status_code = 200
-        else:
-            resp_body = { "message": "article does not exist" }
-            status_code = 404
-        print(session.get('page_views'))
-        session['page_views'] = session.get('page_views') + 1
-        return make_response(resp_body, status_code)
+    if session['page_views'] <= 3:
+
+        article = Article.query.filter(Article.id == id).first()
+        article_json = article.to_dict()
+
+        return make_response(article_json, 200)
+
+    return {'message': 'Maximum pageview limit reached'}, 401
+
     
-    return make_response({ "message": "Maximum pageview limit reached" }, 401)
-
-
-
 if __name__ == '__main__':
     app.run(port=5555)
